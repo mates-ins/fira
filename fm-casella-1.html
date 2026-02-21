@@ -40,7 +40,7 @@
             margin-bottom: 25px;
         }
 
-        button {
+        .controls button {
             padding: 12px 25px;
             font-size: 18px;
             cursor: pointer;
@@ -54,12 +54,12 @@
             font-family: inherit;
         }
 
-        button:hover {
+        .controls button:hover {
             background-color: #c0392b;
             transform: translateY(-2px);
         }
 
-        button:active {
+        .controls button:active {
             transform: translateY(1px);
         }
 
@@ -82,6 +82,8 @@
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
+            outline: 3px solid transparent;
             
             display: flex;
             align-items: center;
@@ -96,8 +98,11 @@
         }
 
         .cell:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.7);
+            outline: 3px solid #f1c40f;
+            outline-offset: -3px;
+            z-index: 2;
         }
 
         .cell:focus-visible {
@@ -111,6 +116,10 @@
             border: 2px solid #1a252f;
             color: #ecf0f1;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .cell.is-black:hover {
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px rgba(241, 196, 15, 0.7);
         }
 
         /* ====== RESPONSIVE ====== */
