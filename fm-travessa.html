@@ -12,10 +12,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             user-select: none;
-            overflow: hidden;
             transition: background-color 1s ease, color 1s ease;
         }
 
@@ -25,19 +24,21 @@
 
         /* Contenidors de Nivell */
         .level-wrapper {
-            display: none; /* S'activen per JS */
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
-            height: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
             animation: fadeIn 1s;
         }
         .level-wrapper.active { display: flex; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        h1 { margin: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 2em; text-align: center;}
+        h1 { margin: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: clamp(1.3em, 4vw, 2em); text-align: center;}
         p, .subtitle { font-size: 1.1em; margin-bottom: 20px; text-align: center; max-width: 700px; }
         .subtitle { color: #8b949e; }
         
@@ -73,6 +74,10 @@
         .boat:hover { filter: brightness(1.1); }
         .boat[data-pos="left"] { left: 10px; }
         .boat[data-pos="right"] { left: calc(100% - 150px); }
+        .boat-hint {
+            position: absolute; bottom: -22px; font-size: 0.6em; color: rgba(255,255,255,0.7);
+            white-space: nowrap; pointer-events: none;
+        }
 
         .character-riu {
             font-size: 4em; cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); user-select: none;
@@ -106,7 +111,7 @@
             background: repeating-linear-gradient(90deg, #5c4033, #5c4033 10px, #3e2723 10px, #3e2723 20px);
             border-radius: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.8); position: relative;
         }
-        .water {
+        .water-pont {
             position: absolute; bottom: -150px; width: 100%; height: 100px;
             background: #0a0c10; color: #1f6feb; text-align: center;
             font-size: 1.2em; letter-spacing: -2px; opacity: 0.5; padding-top: 10px;
@@ -115,6 +120,7 @@
         .char-pont {
             width: 90%; padding: 10px; background-color: #21262d; border: 2px solid #30363d; border-radius: 8px;
             cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;
+            font-family: inherit; font-size: 1em; color: #c9d1d9;
         }
         .char-pont:hover { background-color: #30363d; }
         .char-pont.selected { background-color: #1f6feb; border-color: #58a6ff; color: white; transform: scale(1.02); }
@@ -128,7 +134,7 @@
         .lantern[data-pos="left"] { left: 0%; }
         .lantern[data-pos="right"] { left: 90%; }
 
-        .info-panel { display: flex; gap: 40px; margin-top: 20px; align-items: center; }
+        .info-panel { display: flex; gap: 40px; margin-top: 20px; align-items: center; flex-wrap: wrap; justify-content: center; }
         .timer-box {
             font-size: 2.5em; font-weight: bold; font-family: monospace; padding: 10px 20px;
             background-color: #21262d; border-radius: 10px; border: 2px solid #30363d;
@@ -136,7 +142,7 @@
         .timer-box.danger { color: #e74c3c; border-color: #e74c3c; }
 
         /* CONTROLS GENERALS */
-        .controls { margin-top: 20px; display: flex; gap: 20px; }
+        .controls { margin-top: 20px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
         button {
             padding: 15px 40px; font-size: 1.3em; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.2s;
         }
@@ -156,25 +162,140 @@
         /* MODALS (Compartits) */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); /* Transparent */
+            background: rgba(0,0,0,0.3);
             z-index: 100; flex-direction: column; justify-content: center; align-items: center;
         }
         
         /* Modal Riu */
         #modal-riu .modal-box {
-            background: #2c3e50; padding: 50px; border-radius: 20px; border: 4px solid #f1c40f; text-align: center;
+            background: #2c3e50; padding: 50px; border-radius: 20px; border: 4px solid #f1c40f; text-align: center; max-width: 500px; margin: 20px;
         }
         #modal-riu h2 { color: #f1c40f; font-size: 3em; margin: 0 0 20px 0; }
         
         /* Modal Pont */
         #modal-pont .modal-box {
-            background: rgba(22, 27, 34, 0.95); padding: 40px; border-radius: 15px; border: 2px solid #f1c40f; text-align: center; max-width: 500px;
+            background: rgba(22, 27, 34, 0.95); padding: 40px; border-radius: 15px; border: 2px solid #f1c40f; text-align: center; max-width: 500px; margin: 20px;
         }
         #modal-pont h2 { color: #f1c40f; font-size: 2.5em; margin: 0 0 20px 0; }
         #modal-pont p { color: #c9d1d9; }
 
+        /* Modal Game Over Riu */
+        #modal-gameover .modal-box {
+            background: #2c3e50; padding: 40px; border-radius: 20px; border: 4px solid #e74c3c; text-align: center; max-width: 500px; margin: 20px;
+        }
+        #modal-gameover h2 { color: #e74c3c; font-size: 2.5em; margin: 0 0 20px 0; }
+        #modal-gameover p { color: #ecf0f1; font-size: 1.3em; }
+
         .btn-next { background-color: #2ecc71; color: white; margin-top: 20px; font-size: 1.5em; }
         .btn-start { background-color: #238636; color: white; }
+        .btn-retry { background-color: #e74c3c; color: white; margin-top: 20px; font-size: 1.3em; }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 768px) {
+            .game-container-riu {
+                flex-direction: column;
+                height: auto;
+                max-width: 95%;
+            }
+
+            .bank {
+                width: 100%;
+                height: 100px;
+                flex-direction: row;
+                border-right: none;
+                border-bottom: 8px solid #d35400;
+            }
+            .bank.right {
+                border-left: none;
+                border-bottom: none;
+                border-top: 8px solid #d35400;
+            }
+            .bank-label {
+                position: absolute;
+                top: 5px;
+                font-size: 1em;
+            }
+
+            .river {
+                height: 150px;
+                min-height: 150px;
+            }
+
+            .boat {
+                width: 100px;
+                height: 55px;
+            }
+            .boat[data-pos="left"] { left: 10px; }
+            .boat[data-pos="right"] { left: calc(100% - 120px); }
+
+            .character-riu { font-size: 3em; }
+            .character-riu.in-boat { font-size: 2.2em; }
+
+            .game-board-pont {
+                flex-direction: column;
+                height: auto;
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .side {
+                width: 100%;
+                height: auto;
+                min-height: 80px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .side-title {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+
+            .char-pont {
+                width: auto;
+                flex: 0 1 auto;
+                padding: 8px 12px;
+            }
+
+            .bridge-area {
+                height: 60px;
+                width: 100%;
+            }
+
+            .bridge {
+                height: 15px;
+            }
+
+            .water-pont { display: none; }
+
+            .lantern {
+                top: -35px;
+                font-size: 1.5em;
+            }
+
+            .timer-box { font-size: 2em; }
+
+            button { padding: 12px 25px; font-size: 1.1em; }
+
+            #modal-riu .modal-box,
+            #modal-pont .modal-box,
+            #modal-gameover .modal-box {
+                padding: 25px;
+            }
+            #modal-riu h2, #modal-pont h2, #modal-gameover h2 {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .character-riu { font-size: 2.5em; }
+            .boat { width: 80px; height: 45px; }
+            .boat[data-pos="right"] { left: calc(100% - 100px); }
+            .char-pont { padding: 6px 10px; font-size: 0.9em; }
+            .timer-box { font-size: 1.5em; padding: 8px 14px; }
+        }
 
     </style>
 </head>
@@ -184,32 +305,42 @@
         <h1>Nivell 1: El Riu</h1>
         <p>Ajuda al pagès a creuar el riu. Clic per moure personatges. <br>Vigila qui deixes sol!</p>
 
-        <div class="game-container-riu">
-            <div class="bank left" id="bank-left">
+        <div class="game-container-riu" role="region" aria-label="Tauler del riu">
+            <div class="bank left" id="bank-left" role="group" aria-label="Riba esquerra">
                 <div class="bank-label">Esquerra</div>
             </div>
             <div class="river">
                 <div class="boat-track">
-                    <div class="boat" id="boat" data-pos="left" onclick="riuHandleBoatClick()"></div>
+                    <div class="boat" id="boat" data-pos="left" onclick="riuHandleBoatClick()" role="button" tabindex="0" aria-label="Barca - clic per baixar passatger">
+                        <span class="boat-hint">Clic: baixar</span>
+                    </div>
                 </div>
             </div>
-            <div class="bank right" id="bank-right">
+            <div class="bank right" id="bank-right" role="group" aria-label="Riba dreta">
                 <div class="bank-label">Dreta</div>
             </div>
         </div>
 
-        <div id="status-msg-riu">Selecciona un passatger per començar...</div>
+        <div id="status-msg-riu" role="status" aria-live="polite">Selecciona un passatger per començar...</div>
 
         <div class="controls">
             <button class="btn-row" onclick="riuTryMoveBoat()">🛶 REMAR</button>
             <button class="btn-reset" onclick="riuInitGame()">Reiniciar</button>
         </div>
 
-        <div id="modal-riu" class="modal-overlay">
+        <div id="modal-riu" class="modal-overlay" role="dialog" aria-modal="true">
             <div class="modal-box">
                 <h2 id="modal-title-riu">🎉 VICTÒRIA! 🎉</h2>
                 <p id="modal-text-riu">Has aconseguit passar tothom a l'altra banda!</p>
                 <button class="btn-next" onclick="goToLevel2()">Següent Nivell ➡</button>
+            </div>
+        </div>
+
+        <div id="modal-gameover" class="modal-overlay" role="dialog" aria-modal="true">
+            <div class="modal-box">
+                <h2 id="gameover-title">☠️ Oh no!</h2>
+                <p id="gameover-text"></p>
+                <button class="btn-retry" onclick="riuInitGame()">Tornar a provar</button>
             </div>
         </div>
     </div>
@@ -218,30 +349,31 @@
         <h1>Nivell 2: El Pont i la Llanterna</h1>
         <div class="subtitle">Objectiu: Creuar tothom en màxim <strong>17 minuts</strong>.</div>
 
-        <div class="game-board-pont">
-            <div class="side" id="side-left">
+        <div class="game-board-pont" role="region" aria-label="Tauler del pont">
+            <div class="side" id="side-left" role="group" aria-label="Costat d'inici">
                 <div class="side-title">Inici</div>
                 <div id="container-left"></div>
             </div>
             <div class="bridge-area">
                 <div class="lantern" id="lantern" data-pos="left">🔦</div>
                 <div class="bridge"></div>
-                <div class="water">~~~~~~~~~~~~~~~~~~~</div>
+                <div class="water-pont">~~~~~~~~~~~~~~~~~~~</div>
             </div>
-            <div class="side" id="side-right">
+            <div class="side" id="side-right" role="group" aria-label="Costat final">
                 <div class="side-title">Final</div>
                 <div id="container-right"></div>
             </div>
         </div>
 
         <div class="info-panel">
-            <div class="timer-box" id="timer-display">0 min</div>
+            <div class="timer-box" id="timer-display" role="timer" aria-live="polite">0 min</div>
             <button class="btn-action" id="btn-move" onclick="pontMove()">CREUAR ➡</button>
         </div>
 
-        <div id="msg-area-pont">Selecciona 1 o 2 animals per moure.</div>
+        <div id="msg-area-pont" role="status" aria-live="polite">Selecciona 1 o 2 animals per moure.</div>
 
-        <div id="modal-pont" class="modal-overlay" style="display: flex;"> <div class="modal-box">
+        <div id="modal-pont" class="modal-overlay" role="dialog" aria-modal="true">
+            <div class="modal-box">
                 <h2 id="m-title-pont">L'Enigma</h2>
                 <p id="m-text-pont">
                     Quatre animals han de creuar un pont vell de nit.<br><br>
@@ -277,6 +409,9 @@
         const riuBankRightEl = document.getElementById('bank-right');
         const riuMsgEl = document.getElementById('status-msg-riu');
         const riuModal = document.getElementById('modal-riu');
+        const gameoverModal = document.getElementById('modal-gameover');
+        const gameoverTitle = document.getElementById('gameover-title');
+        const gameoverText = document.getElementById('gameover-text');
 
         function riuInitGame() {
             riuState.boatPos = 'left';
@@ -284,6 +419,7 @@
             riuState.leftBank = [...riuItems];
             riuState.rightBank = [];
             riuModal.style.display = 'none';
+            gameoverModal.style.display = 'none';
             riuMsgEl.textContent = "Tot a punt. Qui puja a la barca?";
             riuMsgEl.className = "";
             riuRender();
@@ -302,7 +438,7 @@
 
             riuBankLeftEl.innerHTML = '<div class="bank-label">Esquerra</div>';
             riuBankRightEl.innerHTML = '<div class="bank-label">Dreta</div>';
-            riuBoatEl.innerHTML = '';
+            riuBoatEl.innerHTML = '<span class="boat-hint">Clic: baixar</span>';
 
             riuState.leftBank.forEach(item => riuBankLeftEl.appendChild(riuCreateChar(item)));
             riuState.rightBank.forEach(item => riuBankRightEl.appendChild(riuCreateChar(item)));
@@ -310,15 +446,19 @@
             if (riuState.passenger) {
                 const el = riuCreateChar(riuState.passenger);
                 el.classList.add('in-boat');
-                riuBoatEl.appendChild(el);
+                riuBoatEl.insertBefore(el, riuBoatEl.firstChild);
             }
         }
 
         function riuCreateChar(item) {
-            const el = document.createElement('div');
+            const el = document.createElement('button');
             el.className = 'character-riu';
             el.textContent = item.emoji;
             el.title = item.name;
+            el.setAttribute('aria-label', item.name);
+            el.style.background = 'none';
+            el.style.border = 'none';
+            el.style.padding = '0';
             el.onclick = (e) => { e.stopPropagation(); riuHandleItemClick(item); };
             return el;
         }
@@ -387,7 +527,11 @@
         function riuGameOver(reason) {
             riuMsgEl.textContent = reason;
             riuMsgEl.className = "text-danger";
-            setTimeout(() => { alert(reason); riuInitGame(); }, 500);
+            setTimeout(() => {
+                gameoverTitle.textContent = "☠️ Oh no!";
+                gameoverText.textContent = reason;
+                gameoverModal.style.display = 'flex';
+            }, 500);
         }
 
         function riuCheckWin() {
@@ -398,14 +542,10 @@
 
         // --- TRANSICIÓ DE NIVELLS ---
         function goToLevel2() {
-            // Amagar nivell 1
             document.getElementById('level-1').classList.remove('active');
-            // Canviar tema
             document.body.classList.remove('theme-day');
             document.body.classList.add('theme-night');
-            // Mostrar nivell 2
             document.getElementById('level-2').classList.add('active');
-            // Iniciar joc 2 (mostrar intro)
             pontModal.style.display = 'flex';
         }
 
@@ -470,7 +610,7 @@
         }
 
         function pontCreateChar(char) {
-            const el = document.createElement('div');
+            const el = document.createElement('button');
             el.className = 'char-pont';
             if (pontState.selectedIds.includes(char.id)) el.classList.add('selected');
             el.innerHTML = `<span class="char-icon">${char.icon} ${char.name}</span><span class="char-speed">${char.speed}m</span>`;
