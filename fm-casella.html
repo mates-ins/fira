@@ -12,14 +12,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             color: white;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         h1 {
             margin: 0;
-            font-size: 3em;
+            font-size: clamp(1.5em, 5vw, 3em);
             font-weight: bold;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -28,9 +30,10 @@
         p {
             margin-top: 10px;
             margin-bottom: 30px;
-            font-size: 1.5em;
+            font-size: clamp(1em, 3vw, 1.5em);
             color: #bdc3c7;
             font-weight: 300;
+            text-align: center;
         }
 
         .controls {
@@ -48,6 +51,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             transition: transform 0.2s, background-color 0.2s;
             font-weight: bold;
+            font-family: inherit;
         }
 
         button:hover {
@@ -63,31 +67,32 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
+            gap: min(8px, 1.5vw);
             background-color: #34495e;
-            padding: 15px;
+            padding: min(15px, 3vw);
             border-radius: 12px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            width: fit-content;
         }
 
         .cell {
-            width: 70px;
-            height: 70px;
-            background-color: #ecf0f1; /* Blanc de base */
+            width: min(70px, 13vw);
+            height: min(70px, 13vw);
+            background-color: #ecf0f1;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             
-            /* Centrar el número */
             display: flex;
             align-items: center;
             justify-content: center;
             
-            /* Estil del número */
-            font-size: 24px;
+            font-size: min(24px, 4vw);
             font-weight: bold;
-            color: #2c3e50; /* Número fosc sobre fons blanc */
-            user-select: none; /* Evita que es seleccioni el text al clicar */
+            color: #2c3e50;
+            user-select: none;
+            border: none;
+            font-family: inherit;
         }
 
         .cell:hover {
@@ -95,12 +100,26 @@
             box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
+        .cell:focus-visible {
+            outline: 3px solid #f1c40f;
+            outline-offset: 2px;
+        }
+
         /* Estil quan la casella és NEGRA */
         .cell.is-black {
-            background-color: #2c3e50; /* Fons fosc */
+            background-color: #2c3e50;
             border: 2px solid #1a252f;
-            color: #ecf0f1; /* Número blanc sobre fons fosc */
+            color: #ecf0f1;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 400px) {
+            body { padding: 10px; }
+            .controls button {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
         }
 
     </style>
@@ -111,11 +130,11 @@
     <p>La casella misteriosa</p>
 
     <div class="controls">
-        <button onclick="generarParitatPerfecta()">GENERAR NOVA GRAELLA</button>
+        <button onclick="generarParitatPerfecta()" aria-label="Generar nova graella">GENERAR NOVA GRAELLA</button>
     </div>
 
-    <div class="grid" id="board">
-        </div>
+    <div class="grid" id="board" role="grid" aria-label="Graella 6x6 de caselles">
+    </div>
 
     <script>
         const board = document.getElementById('board');
@@ -155,23 +174,22 @@
         }
 
         function dibuixarGraella() {
-            let comptador = 1; // Per numerar de l'1 al 36
+            let comptador = 1;
 
             for (let r = 0; r < size; r++) {
                 for (let c = 0; c < size; c++) {
-                    const cell = document.createElement('div');
+                    const cell = document.createElement('button');
                     cell.classList.add('cell');
                     
-                    // Afegim el número dins la casella
                     cell.textContent = comptador;
+                    cell.setAttribute('aria-label', `Casella ${comptador}, ${gridData[r][c] === 1 ? 'negra' : 'blanca'}`);
                     comptador++;
 
-                    // Si la dada és 1, afegim la classe negra
                     if (gridData[r][c] === 1) {
                         cell.classList.add('is-black');
                     }
 
-                    // AFEGIR EVENT CLICK
+                    // EVENT CLICK: toggle blanc/negre
                     cell.addEventListener('click', function() {
                         this.classList.toggle('is-black');
                     });
