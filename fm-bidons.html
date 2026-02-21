@@ -7,19 +7,21 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2c3e50; /* Fons fosc coherent amb l'altre enigma */
+            background-color: #2c3e50;
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         h1 {
             margin: 0;
-            font-size: 2.5em;
+            font-size: clamp(1.5em, 5vw, 2.5em);
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 10px;
@@ -29,6 +31,7 @@
             color: #bdc3c7;
             font-size: 1.2em;
             margin-bottom: 40px;
+            text-align: center;
         }
 
         .game-area {
@@ -48,7 +51,7 @@
 
         .jug {
             border: 4px solid #ecf0f1;
-            border-top: none; /* Obert per dalt */
+            border-top: none;
             border-radius: 0 0 15px 15px;
             position: relative;
             background-color: rgba(255, 255, 255, 0.1);
@@ -58,16 +61,16 @@
         }
 
         /* Alçada visual proporcional a la capacitat */
-        #jug5 { height: 250px; } /* 50px per litre */
+        #jug5 { height: 250px; }
         #jug3 { height: 150px; }
 
         /* L'AIGUA */
         .water {
-            background-color: #3498db; /* Blau aigua */
+            background-color: #3498db;
             width: 100%;
             position: absolute;
             bottom: 0;
-            height: 0%; /* Canvia amb JS */
+            height: 0%;
             transition: height 0.5s ease-in-out;
             display: flex;
             align-items: center;
@@ -77,7 +80,7 @@
             color: rgba(255,255,255,0.8);
         }
 
-        /* MARQUES DE LITRES (Opcional, visual) */
+        /* MARQUES DE LITRES */
         .lines {
             position: absolute;
             width: 100%;
@@ -95,6 +98,28 @@
             font-weight: bold;
         }
 
+        /* FEEDBACK VISUAL */
+        #action-feedback {
+            height: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #f39c12;
+            text-align: center;
+            transition: opacity 0.3s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
+            100% { transform: translateX(0); }
+        }
+        .jug.shake-anim {
+            animation: shake 0.4s;
+        }
+
         /* BOTONS DE CONTROL */
         .controls {
             display: flex;
@@ -109,38 +134,48 @@
             font-weight: bold;
             font-family: inherit;
             transition: transform 0.1s;
+            font-size: 1em;
         }
         button:active { transform: scale(0.95); }
 
-        .btn-fill { background-color: #2ecc71; color: white; } /* Verd */
-        .btn-empty { background-color: #e74c3c; color: white; } /* Vermell */
-        .btn-transfer { background-color: #f39c12; color: white; font-size: 1.2em;} /* Taronja */
+        .btn-fill { background-color: #2ecc71; color: white; }
+        .btn-empty { background-color: #e74c3c; color: white; }
+        .btn-transfer { background-color: #f39c12; color: white; font-size: 1.2em;}
 
-        /* ZONA DE TRANSFERÈNCIA (Fletxes) */
+        /* ZONA DE TRANSFERÈNCIA */
         .transfer-area {
             display: flex;
             flex-direction: column;
             justify-content: center;
             gap: 20px;
-            height: 200px; /* Alineat amb el mig de les gerres */
+            height: 200px;
         }
 
         /* MISSATGE DE VICTÒRIA */
         #victory-message {
             display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.9);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .victory-box {
+            background-color: rgba(44, 62, 80, 0.95);
             padding: 40px;
             border-radius: 20px;
             text-align: center;
             border: 4px solid #f1c40f;
-            z-index: 10;
+            max-width: 500px;
+            margin: 20px;
         }
-        #victory-message h2 { color: #f1c40f; font-size: 3em; margin: 0;}
-        #victory-message p { color: white; font-size: 1.5em; }
+        .victory-box h2 { color: #f1c40f; font-size: 3em; margin: 0; }
+        .victory-box p { color: white; font-size: 1.5em; }
         
         .reset-all {
             margin-top: 30px;
@@ -150,6 +185,48 @@
             font-size: 1.2em;
         }
 
+        /* ====== RESPONSIVE ====== */
+        @media (max-width: 500px) {
+            body { padding: 15px; }
+
+            .game-area {
+                gap: 20px;
+            }
+
+            .jug {
+                width: 80px;
+            }
+            #jug5 { height: 180px; }
+            #jug3 { height: 108px; }
+
+            .info { font-size: 1.2em; }
+
+            .water { font-size: 1.2em; }
+
+            .transfer-area {
+                height: auto;
+                gap: 12px;
+            }
+
+            .btn-transfer { font-size: 1em; padding: 8px 12px; }
+
+            .controls {
+                gap: 6px;
+            }
+            .controls button {
+                padding: 6px 10px;
+                font-size: 0.85em;
+            }
+
+            p { font-size: 1em; margin-bottom: 25px; }
+
+            .victory-box {
+                padding: 25px;
+            }
+            .victory-box h2 { font-size: 2em; }
+            .victory-box p { font-size: 1.2em; }
+        }
+
     </style>
 </head>
 <body>
@@ -157,11 +234,13 @@
     <h1>Enigma</h1>
     <p>Objectiu: Aconseguir exactament <strong>4 LITRES</strong> a la bidó gran.</p>
 
-    <div class="game-area">
+    <div id="action-feedback" role="status" aria-live="polite"></div>
+
+    <div class="game-area" role="region" aria-label="Zona de joc amb bidons">
         
         <div class="jug-container">
             <div class="info">5 litres</div>
-            <div class="jug" id="jug5">
+            <div class="jug" id="jug5" aria-label="Bidó de 5 litres">
                 <div class="lines">
                     <div class="line" style="bottom: 20%"></div>
                     <div class="line" style="bottom: 40%"></div>
@@ -171,19 +250,19 @@
                 <div class="water" id="water5">0L</div>
             </div>
             <div class="controls">
-                <button class="btn-fill" onclick="fillJug(5)">Omplir</button>
-                <button class="btn-empty" onclick="emptyJug(5)">Buidar</button>
+                <button class="btn-fill" onclick="fillJug(5)" aria-label="Omplir bidó de 5 litres">Omplir</button>
+                <button class="btn-empty" onclick="emptyJug(5)" aria-label="Buidar bidó de 5 litres">Buidar</button>
             </div>
         </div>
 
         <div class="transfer-area">
-            <button class="btn-transfer" onclick="transfer(5, 3)" title="Passar de gran a petit">gran &#8594; petit</button>
-            <button class="btn-transfer" onclick="transfer(3, 5)" title="Passar de petit a gran">petit &#8594; gran</button>
+            <button class="btn-transfer" onclick="transfer(5, 3)" title="Passar de gran a petit" aria-label="Transferir de bidó gran a petit">gran &#8594; petit</button>
+            <button class="btn-transfer" onclick="transfer(3, 5)" title="Passar de petit a gran" aria-label="Transferir de bidó petit a gran">petit &#8594; gran</button>
         </div>
 
         <div class="jug-container">
             <div class="info">3 litres</div>
-            <div class="jug" id="jug3">
+            <div class="jug" id="jug3" aria-label="Bidó de 3 litres">
                 <div class="lines">
                     <div class="line" style="bottom: 33.3%"></div>
                     <div class="line" style="bottom: 66.6%"></div>
@@ -191,8 +270,8 @@
                 <div class="water" id="water3">0L</div>
             </div>
             <div class="controls">
-                <button class="btn-fill" onclick="fillJug(3)">Omplir</button>
-                <button class="btn-empty" onclick="emptyJug(3)">Buidar</button>
+                <button class="btn-fill" onclick="fillJug(3)" aria-label="Omplir bidó de 3 litres">Omplir</button>
+                <button class="btn-empty" onclick="emptyJug(3)" aria-label="Buidar bidó de 3 litres">Buidar</button>
             </div>
         </div>
 
@@ -200,28 +279,46 @@
 
     <button class="reset-all" onclick="resetGame()">Reiniciar Tot</button>
 
-    <div id="victory-message">
-        <h2>🎉 MOLT BÉ! 🎉</h2>
-        <p>Has aconseguit l'objectiu de tenir 4 litres!</p>
-        <button class="btn-fill" onclick="resetGame()">Tornar a jugar</button>
+    <div id="victory-message" role="dialog" aria-modal="true" aria-labelledby="victory-heading">
+        <div class="victory-box">
+            <h2 id="victory-heading">🎉 MOLT BÉ! 🎉</h2>
+            <p>Has aconseguit l'objectiu de tenir 4 litres!</p>
+            <button class="btn-fill" onclick="resetGame()">Tornar a jugar</button>
+        </div>
     </div>
 
     <script>
         // ESTAT DEL JOC
         let jugs = {
-            5: { current: 0, max: 5, element: document.getElementById('water5') },
-            3: { current: 0, max: 3, element: document.getElementById('water3') }
+            5: { current: 0, max: 5, element: document.getElementById('water5'), jugEl: document.getElementById('jug5') },
+            3: { current: 0, max: 3, element: document.getElementById('water3'), jugEl: document.getElementById('jug3') }
         };
 
-        // ACTUALITZAR VISTA (Visuals)
+        const feedbackEl = document.getElementById('action-feedback');
+        let feedbackTimer = null;
+
+        function showFeedback(msg) {
+            if (feedbackTimer) clearTimeout(feedbackTimer);
+            feedbackEl.textContent = msg;
+            feedbackEl.style.opacity = '1';
+            feedbackTimer = setTimeout(() => {
+                feedbackEl.style.opacity = '0';
+            }, 1500);
+        }
+
+        function shakeJug(size) {
+            const el = jugs[size].jugEl;
+            el.classList.remove('shake-anim');
+            void el.offsetWidth; // force reflow
+            el.classList.add('shake-anim');
+        }
+
+        // ACTUALITZAR VISTA
         function updateView() {
             for (let size in jugs) {
                 let jug = jugs[size];
-                // Alçada en percentatge
                 let percent = (jug.current / jug.max) * 100;
                 jug.element.style.height = percent + '%';
-                
-                // Text interior (si està buit no mostrem 0L per estètica, o sí)
                 jug.element.textContent = jug.current > 0 ? jug.current + 'L' : '';
             }
             checkWin();
@@ -229,28 +326,45 @@
 
         // ACCIÓ: OMPLIR
         function fillJug(size) {
+            if (jugs[size].current === jugs[size].max) {
+                showFeedback(`El bidó de ${size}L ja és ple!`);
+                shakeJug(size);
+                return;
+            }
             jugs[size].current = jugs[size].max;
             updateView();
         }
 
         // ACCIÓ: BUIDAR
         function emptyJug(size) {
+            if (jugs[size].current === 0) {
+                showFeedback(`El bidó de ${size}L ja és buit!`);
+                shakeJug(size);
+                return;
+            }
             jugs[size].current = 0;
             updateView();
         }
 
-        // ACCIÓ: TRANSFERIR (La lògica matemàtica)
+        // ACCIÓ: TRANSFERIR
         function transfer(fromSize, toSize) {
             let fromJug = jugs[fromSize];
             let toJug = jugs[toSize];
 
-            // Quant hi cap a la destinació?
+            if (fromJug.current === 0) {
+                showFeedback(`El bidó de ${fromSize}L és buit, no hi ha res a transferir!`);
+                shakeJug(fromSize);
+                return;
+            }
+            if (toJug.current === toJug.max) {
+                showFeedback(`El bidó de ${toSize}L ja és ple!`);
+                shakeJug(toSize);
+                return;
+            }
+
             let spaceAvailable = toJug.max - toJug.current;
-            
-            // Quanta aigua movem? (El mínim entre la que tenim i la que hi cap)
             let amountToMove = Math.min(fromJug.current, spaceAvailable);
 
-            // Executem el moviment
             fromJug.current -= amountToMove;
             toJug.current += amountToMove;
 
@@ -262,16 +376,15 @@
             jugs[5].current = 0;
             jugs[3].current = 0;
             document.getElementById('victory-message').style.display = 'none';
+            feedbackEl.textContent = '';
             updateView();
         }
 
         // COMPROVAR VICTÒRIA
         function checkWin() {
-            // L'enigma demana 4 litres (normalment a la gran)
             if (jugs[5].current === 4) {
-                // Petit retard perquè l'animació acabi abans del missatge
                 setTimeout(() => {
-                    document.getElementById('victory-message').style.display = 'block';
+                    document.getElementById('victory-message').style.display = 'flex';
                 }, 500);
             }
         }
