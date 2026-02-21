@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enigma: La casella misteriosa</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3em;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        p {
+            margin-top: 10px;
+            margin-bottom: 30px;
+            font-size: 1.5em;
+            color: #bdc3c7;
+            font-weight: 300;
+        }
+
+        .controls {
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 50px;
+            background-color: #e74c3c;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s, background-color 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* La Graella 6x6 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            background-color: #34495e;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            background-color: #ecf0f1; /* Blanc de base */
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            
+            /* Centrar el número */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* Estil del número */
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50; /* Número fosc sobre fons blanc */
+            user-select: none; /* Evita que es seleccioni el text al clicar */
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* Estil quan la casella és NEGRA */
+        .cell.is-black {
+            background-color: #2c3e50; /* Fons fosc */
+            border: 2px solid #1a252f;
+            color: #ecf0f1; /* Número blanc sobre fons fosc */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Enigma</h1>
+    <p>La casella misteriosa</p>
+
+    <div class="controls">
+        <button onclick="generarParitatPerfecta()">GENERAR NOVA GRAELLA</button>
+    </div>
+
+    <div class="grid" id="board">
+        </div>
+
+    <script>
+        const board = document.getElementById('board');
+        const size = 6;
+        
+        // Matriu de dades per calcular la lògica (0 = blanc, 1 = negre)
+        let gridData = [];
+
+        function generarParitatPerfecta() {
+            // 1. Netejar dades
+            gridData = Array(size).fill().map(() => Array(size).fill(0));
+            board.innerHTML = '';
+
+            // 2. Omplir aleatòriament el quadrat 5x5 (files 0-4, cols 0-4)
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 5; c++) {
+                    gridData[r][c] = Math.random() < 0.5 ? 0 : 1;
+                }
+            }
+
+            // 3. Calcular la 6a COLUMNA (Paritat de fila)
+            for (let r = 0; r < 5; r++) {
+                let rowSum = 0;
+                for (let c = 0; c < 5; c++) rowSum += gridData[r][c];
+                gridData[r][5] = (rowSum % 2 === 0) ? 0 : 1;
+            }
+
+            // 4. Calcular la 6a FILA (Paritat de columna)
+            for (let c = 0; c < 6; c++) {
+                let colSum = 0;
+                for (let r = 0; r < 5; r++) colSum += gridData[r][c];
+                gridData[5][c] = (colSum % 2 === 0) ? 0 : 1;
+            }
+
+            // 5. Dibuixar la graella al HTML
+            dibuixarGraella();
+        }
+
+        function dibuixarGraella() {
+            let comptador = 1; // Per numerar de l'1 al 36
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    
+                    // Afegim el número dins la casella
+                    cell.textContent = comptador;
+                    comptador++;
+
+                    // Si la dada és 1, afegim la classe negra
+                    if (gridData[r][c] === 1) {
+                        cell.classList.add('is-black');
+                    }
+
+                    // AFEGIR EVENT CLICK
+                    cell.addEventListener('click', function() {
+                        this.classList.toggle('is-black');
+                    });
+
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        // Generar una graella només obrir la pàgina
+        generarParitatPerfecta();
+
+    </script>
+
+</body>
+</html>

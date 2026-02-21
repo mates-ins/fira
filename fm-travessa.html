@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Gran Travessia: Riu i Pont</title>
+    <style>
+        /* ESTILS GENERALS I TRANSICIONS */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            user-select: none;
+            overflow: hidden;
+            transition: background-color 1s ease, color 1s ease;
+        }
+
+        /* Classes per canviar el tema del Body */
+        body.theme-day { background-color: #2c3e50; color: white; }
+        body.theme-night { background-color: #0d1117; color: #c9d1d9; }
+
+        /* Contenidors de Nivell */
+        .level-wrapper {
+            display: none; /* S'activen per JS */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 1s;
+        }
+        .level-wrapper.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        h1 { margin: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 2em; text-align: center;}
+        p, .subtitle { font-size: 1.1em; margin-bottom: 20px; text-align: center; max-width: 700px; }
+        .subtitle { color: #8b949e; }
+        
+        /* --- ESTILS NIVELL 1 (RIU) --- */
+        #level-1 h1 { color: white; }
+        #level-1 p { color: #bdc3c7; }
+
+        .game-container-riu {
+            display: flex; width: 90%; max-width: 1000px; height: 400px;
+            border: 4px solid #34495e; border-radius: 15px; overflow: hidden;
+            position: relative; background-color: #87CEEB;
+        }
+
+        .bank {
+            width: 30%; height: 100%; background-color: #27ae60;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 15px; position: relative; border-right: 10px solid #d35400; z-index: 2;
+            transition: background-color 0.3s;
+        }
+        .bank.right { border-right: none; border-left: 10px solid #d35400; }
+        .bank.active-bank { background-color: #2ecc71; box-shadow: inset 0 0 20px rgba(255,255,255,0.2); }
+        .bank-label { position: absolute; top: 20px; font-weight: bold; color: rgba(0,0,0,0.2); text-transform: uppercase; font-size: 1.5em; }
+
+        .river { flex-grow: 1; background-color: #3498db; position: relative; display: flex; align-items: center; }
+        .boat-track { width: 100%; height: 100px; position: relative; display: flex; align-items: center; }
+
+        .boat {
+            width: 130px; height: 70px; background-color: #8e44ad; border-radius: 0 0 60px 60px;
+            position: absolute; transition: left 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            display: flex; justify-content: center; align-items: flex-end; padding-bottom: 15px;
+            border: 4px solid #5e2c75; cursor: pointer; z-index: 10; box-shadow: 0 10px 10px rgba(0,0,0,0.2);
+        }
+        .boat:hover { filter: brightness(1.1); }
+        .boat[data-pos="left"] { left: 10px; }
+        .boat[data-pos="right"] { left: calc(100% - 150px); }
+
+        .character-riu {
+            font-size: 4em; cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); user-select: none;
+        }
+        .character-riu:hover { transform: scale(1.15); }
+        .character-riu.in-boat { font-size: 3em; margin-bottom: 5px; }
+
+        /* --- ESTILS NIVELL 2 (PONT) --- */
+        #level-2 h1 { color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
+
+        .game-board-pont {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 95%; max-width: 1000px; height: 400px;
+            background: linear-gradient(to bottom, #161b22 0%, #0d1117 100%);
+            border: 2px solid #30363d; border-radius: 15px;
+            position: relative; padding: 0 20px; box-sizing: border-box; overflow: hidden;
+        }
+
+        .side {
+            width: 30%; height: 80%; border-radius: 10px;
+            background-color: rgba(255,255,255,0.05); display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start; padding: 10px; gap: 10px;
+            transition: box-shadow 0.3s;
+        }
+        .side.active-side { box-shadow: inset 0 0 20px rgba(241, 196, 15, 0.1); border: 1px solid rgba(241, 196, 15, 0.3); }
+        .side-title { font-weight: bold; text-transform: uppercase; color: #58a6ff; margin-bottom: 10px;}
+
+        .bridge-area { flex-grow: 1; height: 100px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .bridge {
+            width: 100%; height: 20px;
+            background: repeating-linear-gradient(90deg, #5c4033, #5c4033 10px, #3e2723 10px, #3e2723 20px);
+            border-radius: 5px; box-shadow: 0 10px 20px rgba(0,0,0,0.8); position: relative;
+        }
+        .water {
+            position: absolute; bottom: -150px; width: 100%; height: 100px;
+            background: #0a0c10; color: #1f6feb; text-align: center;
+            font-size: 1.2em; letter-spacing: -2px; opacity: 0.5; padding-top: 10px;
+        }
+
+        .char-pont {
+            width: 90%; padding: 10px; background-color: #21262d; border: 2px solid #30363d; border-radius: 8px;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;
+        }
+        .char-pont:hover { background-color: #30363d; }
+        .char-pont.selected { background-color: #1f6feb; border-color: #58a6ff; color: white; transform: scale(1.02); }
+        .char-icon { font-size: 1.5em; display: flex; align-items: center; gap: 10px;}
+        .char-speed { font-weight: bold; font-family: monospace; font-size: 1.2em;}
+
+        .lantern {
+            font-size: 2em; position: absolute; top: -50px; transition: left 1s ease-in-out;
+            filter: drop-shadow(0 0 15px #f1c40f); z-index: 10;
+        }
+        .lantern[data-pos="left"] { left: 0%; }
+        .lantern[data-pos="right"] { left: 90%; }
+
+        .info-panel { display: flex; gap: 40px; margin-top: 20px; align-items: center; }
+        .timer-box {
+            font-size: 2.5em; font-weight: bold; font-family: monospace; padding: 10px 20px;
+            background-color: #21262d; border-radius: 10px; border: 2px solid #30363d;
+        }
+        .timer-box.danger { color: #e74c3c; border-color: #e74c3c; }
+
+        /* CONTROLS GENERALS */
+        .controls { margin-top: 20px; display: flex; gap: 20px; }
+        button {
+            padding: 15px 40px; font-size: 1.3em; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.2s;
+        }
+        .btn-row { background-color: #f39c12; color: white; box-shadow: 0 5px 0 #d35400; }
+        .btn-row:active { transform: translateY(5px); box-shadow: none; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        .btn-action { background-color: #f1c40f; color: #0d1117; }
+        .btn-action:hover { background-color: #f39c12; }
+        .btn-action:disabled { background-color: #30363d; color: #8b949e; cursor: not-allowed; }
+
+        #status-msg-riu, #msg-area-pont { height: 40px; margin-top: 15px; font-weight: bold; font-size: 1.3em; text-align: center; }
+        #status-msg-riu { color: #ecf0f1; }
+        #msg-area-pont { color: #8b949e; height: 30px; }
+        .text-danger { color: #e74c3c !important; animation: shake 0.5s; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+
+        /* MODALS (Compartits) */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); /* Transparent */
+            z-index: 100; flex-direction: column; justify-content: center; align-items: center;
+        }
+        
+        /* Modal Riu */
+        #modal-riu .modal-box {
+            background: #2c3e50; padding: 50px; border-radius: 20px; border: 4px solid #f1c40f; text-align: center;
+        }
+        #modal-riu h2 { color: #f1c40f; font-size: 3em; margin: 0 0 20px 0; }
+        
+        /* Modal Pont */
+        #modal-pont .modal-box {
+            background: rgba(22, 27, 34, 0.95); padding: 40px; border-radius: 15px; border: 2px solid #f1c40f; text-align: center; max-width: 500px;
+        }
+        #modal-pont h2 { color: #f1c40f; font-size: 2.5em; margin: 0 0 20px 0; }
+        #modal-pont p { color: #c9d1d9; }
+
+        .btn-next { background-color: #2ecc71; color: white; margin-top: 20px; font-size: 1.5em; }
+        .btn-start { background-color: #238636; color: white; }
+
+    </style>
+</head>
+<body class="theme-day">
+
+    <div id="level-1" class="level-wrapper active">
+        <h1>Nivell 1: El Riu</h1>
+        <p>Ajuda al pagès a creuar el riu. Clic per moure personatges. <br>Vigila qui deixes sol!</p>
+
+        <div class="game-container-riu">
+            <div class="bank left" id="bank-left">
+                <div class="bank-label">Esquerra</div>
+            </div>
+            <div class="river">
+                <div class="boat-track">
+                    <div class="boat" id="boat" data-pos="left" onclick="riuHandleBoatClick()"></div>
+                </div>
+            </div>
+            <div class="bank right" id="bank-right">
+                <div class="bank-label">Dreta</div>
+            </div>
+        </div>
+
+        <div id="status-msg-riu">Selecciona un passatger per començar...</div>
+
+        <div class="controls">
+            <button class="btn-row" onclick="riuTryMoveBoat()">🛶 REMAR</button>
+            <button class="btn-reset" onclick="riuInitGame()">Reiniciar</button>
+        </div>
+
+        <div id="modal-riu" class="modal-overlay">
+            <div class="modal-box">
+                <h2 id="modal-title-riu">🎉 VICTÒRIA! 🎉</h2>
+                <p id="modal-text-riu">Has aconseguit passar tothom a l'altra banda!</p>
+                <button class="btn-next" onclick="goToLevel2()">Següent Nivell ➡</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="level-2" class="level-wrapper">
+        <h1>Nivell 2: El Pont i la Llanterna</h1>
+        <div class="subtitle">Objectiu: Creuar tothom en màxim <strong>17 minuts</strong>.</div>
+
+        <div class="game-board-pont">
+            <div class="side" id="side-left">
+                <div class="side-title">Inici</div>
+                <div id="container-left"></div>
+            </div>
+            <div class="bridge-area">
+                <div class="lantern" id="lantern" data-pos="left">🔦</div>
+                <div class="bridge"></div>
+                <div class="water">~~~~~~~~~~~~~~~~~~~</div>
+            </div>
+            <div class="side" id="side-right">
+                <div class="side-title">Final</div>
+                <div id="container-right"></div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="timer-box" id="timer-display">0 min</div>
+            <button class="btn-action" id="btn-move" onclick="pontMove()">CREUAR ➡</button>
+        </div>
+
+        <div id="msg-area-pont">Selecciona 1 o 2 animals per moure.</div>
+
+        <div id="modal-pont" class="modal-overlay" style="display: flex;"> <div class="modal-box">
+                <h2 id="m-title-pont">L'Enigma</h2>
+                <p id="m-text-pont">
+                    Quatre animals han de creuar un pont vell de nit.<br><br>
+                    ⚠ El pont només aguanta <strong>2 animals</strong>.<br>
+                    ⚠ Necessiten la <strong>llanterna</strong> per veure-hi.<br>
+                    ⚠ El grup va a la velocitat del <strong>més lent</strong>.<br><br>
+                    Teniu <strong>17 minuts</strong> abans que la llanterna s'apagui.
+                </p>
+                <button class="btn-start" onclick="pontStartGame()">Començar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // LOGICA NIVELL 1: EL RIU
+        // =========================================================
+        const riuItems = [
+            { id: 'wolf', emoji: '🐺', name: 'Llop' },
+            { id: 'goat', emoji: '🐐', name: 'Cabra' },
+            { id: 'cabbage', emoji: '🥬', name: 'Enciam' }
+        ];
+
+        let riuState = {
+            boatPos: 'left',
+            passenger: null,
+            leftBank: [],
+            rightBank: []
+        };
+
+        const riuBoatEl = document.getElementById('boat');
+        const riuBankLeftEl = document.getElementById('bank-left');
+        const riuBankRightEl = document.getElementById('bank-right');
+        const riuMsgEl = document.getElementById('status-msg-riu');
+        const riuModal = document.getElementById('modal-riu');
+
+        function riuInitGame() {
+            riuState.boatPos = 'left';
+            riuState.passenger = null;
+            riuState.leftBank = [...riuItems];
+            riuState.rightBank = [];
+            riuModal.style.display = 'none';
+            riuMsgEl.textContent = "Tot a punt. Qui puja a la barca?";
+            riuMsgEl.className = "";
+            riuRender();
+        }
+
+        function riuRender() {
+            riuBoatEl.setAttribute('data-pos', riuState.boatPos);
+            
+            if (riuState.boatPos === 'left') {
+                riuBankLeftEl.classList.add('active-bank');
+                riuBankRightEl.classList.remove('active-bank');
+            } else {
+                riuBankLeftEl.classList.remove('active-bank');
+                riuBankRightEl.classList.add('active-bank');
+            }
+
+            riuBankLeftEl.innerHTML = '<div class="bank-label">Esquerra</div>';
+            riuBankRightEl.innerHTML = '<div class="bank-label">Dreta</div>';
+            riuBoatEl.innerHTML = '';
+
+            riuState.leftBank.forEach(item => riuBankLeftEl.appendChild(riuCreateChar(item)));
+            riuState.rightBank.forEach(item => riuBankRightEl.appendChild(riuCreateChar(item)));
+
+            if (riuState.passenger) {
+                const el = riuCreateChar(riuState.passenger);
+                el.classList.add('in-boat');
+                riuBoatEl.appendChild(el);
+            }
+        }
+
+        function riuCreateChar(item) {
+            const el = document.createElement('div');
+            el.className = 'character-riu';
+            el.textContent = item.emoji;
+            el.title = item.name;
+            el.onclick = (e) => { e.stopPropagation(); riuHandleItemClick(item); };
+            return el;
+        }
+
+        function riuHandleBoatClick() {
+            if (riuState.passenger) riuHandleItemClick(riuState.passenger);
+            else riuMsgEl.textContent = "La barca és buida.";
+        }
+
+        function riuHandleItemClick(item) {
+            // 1. BAIXAR
+            if (riuState.passenger && riuState.passenger.id === item.id) {
+                riuState.passenger = null;
+                if (riuState.boatPos === 'left') riuState.leftBank.push(item);
+                else riuState.rightBank.push(item);
+                riuMsgEl.textContent = `${item.name} ha baixat.`;
+                riuRender();
+                riuCheckWin();
+                return;
+            }
+
+            // 2. Abast
+            const isOnLeft = riuState.leftBank.find(i => i.id === item.id);
+            const isOnRight = riuState.rightBank.find(i => i.id === item.id);
+            const isReachable = (riuState.boatPos === 'left' && isOnLeft) || (riuState.boatPos === 'right' && isOnRight);
+
+            if (!isReachable) {
+                riuMsgEl.textContent = `❌ És a l'altra banda!`;
+                riuMsgEl.className = "text-danger";
+                setTimeout(() => riuMsgEl.className = "", 500);
+                return;
+            }
+
+            // 3. PUJAR/SWAP
+            if (riuState.passenger) {
+                const old = riuState.passenger;
+                if (riuState.boatPos === 'left') riuState.leftBank.push(old);
+                else riuState.rightBank.push(old);
+                riuState.passenger = item;
+            } else {
+                riuState.passenger = item;
+            }
+            
+            // Treure de la riba
+            if (riuState.boatPos === 'left') riuState.leftBank = riuState.leftBank.filter(i => i.id !== item.id);
+            else riuState.rightBank = riuState.rightBank.filter(i => i.id !== item.id);
+            
+            riuRender();
+        }
+
+        function riuTryMoveBoat() {
+            const newPos = riuState.boatPos === 'left' ? 'right' : 'left';
+            riuState.boatPos = newPos;
+            riuRender();
+
+            let unsafeBank = (newPos === 'right') ? riuState.leftBank : riuState.rightBank;
+            const hasWolf = unsafeBank.find(i => i.id === 'wolf');
+            const hasGoat = unsafeBank.find(i => i.id === 'goat');
+            const hasCabbage = unsafeBank.find(i => i.id === 'cabbage');
+
+            if (hasWolf && hasGoat) riuGameOver("☠️ El Llop s'ha menjat la Cabra!");
+            else if (hasGoat && hasCabbage) riuGameOver("☠️ La Cabra s'ha menjat l'Enciam!");
+            else riuMsgEl.textContent = "Has creuat el riu.";
+        }
+
+        function riuGameOver(reason) {
+            riuMsgEl.textContent = reason;
+            riuMsgEl.className = "text-danger";
+            setTimeout(() => { alert(reason); riuInitGame(); }, 500);
+        }
+
+        function riuCheckWin() {
+            if (riuState.leftBank.length === 0 && riuState.passenger === null && riuState.boatPos === 'right') {
+                riuModal.style.display = 'flex';
+            }
+        }
+
+        // --- TRANSICIÓ DE NIVELLS ---
+        function goToLevel2() {
+            // Amagar nivell 1
+            document.getElementById('level-1').classList.remove('active');
+            // Canviar tema
+            document.body.classList.remove('theme-day');
+            document.body.classList.add('theme-night');
+            // Mostrar nivell 2
+            document.getElementById('level-2').classList.add('active');
+            // Iniciar joc 2 (mostrar intro)
+            pontModal.style.display = 'flex';
+        }
+
+
+        // =========================================================
+        // LOGICA NIVELL 2: EL PONT
+        // =========================================================
+        const pontChars = [
+            { id: 'c1', name: 'Llebre', speed: 1, icon: '🐇' },
+            { id: 'c2', name: 'Guineu', speed: 2, icon: '🦊' },
+            { id: 'c3', name: 'Cocodril', speed: 5, icon: '🐊' },
+            { id: 'c4', name: 'Tortuga', speed: 10, icon: '🐢' }
+        ];
+
+        let pontState = {
+            leftSide: [], rightSide: [], lanternPos: 'left', time: 0, selectedIds: []
+        };
+
+        const pontContainerLeft = document.getElementById('container-left');
+        const pontContainerRight = document.getElementById('container-right');
+        const lanternEl = document.getElementById('lantern');
+        const timerEl = document.getElementById('timer-display');
+        const btnMove = document.getElementById('btn-move');
+        const msgAreaPont = document.getElementById('msg-area-pont');
+        const pontModal = document.getElementById('modal-pont');
+        const sideLeft = document.getElementById('side-left');
+        const sideRight = document.getElementById('side-right');
+
+        function pontStartGame() {
+            pontState.leftSide = [...pontChars];
+            pontState.rightSide = [];
+            pontState.lanternPos = 'left';
+            pontState.time = 0;
+            pontState.selectedIds = [];
+            pontModal.style.display = 'none';
+            pontRender();
+        }
+
+        function pontRender() {
+            pontContainerLeft.innerHTML = '';
+            pontContainerRight.innerHTML = '';
+            pontState.leftSide.forEach(c => pontContainerLeft.appendChild(pontCreateChar(c)));
+            pontState.rightSide.forEach(c => pontContainerRight.appendChild(pontCreateChar(c)));
+
+            lanternEl.setAttribute('data-pos', pontState.lanternPos);
+            
+            if (pontState.lanternPos === 'left') {
+                btnMove.innerText = "CREUAR ➡";
+                sideLeft.classList.add('active-side');
+                sideRight.classList.remove('active-side');
+            } else {
+                btnMove.innerText = "⬅ TORNAR";
+                sideLeft.classList.remove('active-side');
+                sideRight.classList.add('active-side');
+            }
+
+            timerEl.innerText = pontState.time + " min";
+            if(pontState.time > 17) timerEl.classList.add('danger');
+            else timerEl.classList.remove('danger');
+
+            btnMove.disabled = pontState.selectedIds.length === 0;
+        }
+
+        function pontCreateChar(char) {
+            const el = document.createElement('div');
+            el.className = 'char-pont';
+            if (pontState.selectedIds.includes(char.id)) el.classList.add('selected');
+            el.innerHTML = `<span class="char-icon">${char.icon} ${char.name}</span><span class="char-speed">${char.speed}m</span>`;
+            el.onclick = () => pontToggleSelect(char);
+            return el;
+        }
+
+        function pontToggleSelect(char) {
+            const isLeft = pontState.leftSide.find(c => c.id === char.id);
+            if (pontState.lanternPos === 'left' && !isLeft) {
+                msgAreaPont.innerText = "Necessiten la llanterna (Esquerra)!"; return;
+            }
+            if (pontState.lanternPos === 'right' && isLeft) {
+                msgAreaPont.innerText = "Necessiten la llanterna (Dreta)!"; return;
+            }
+
+            if (pontState.selectedIds.includes(char.id)) {
+                pontState.selectedIds = pontState.selectedIds.filter(id => id !== char.id);
+            } else {
+                if (pontState.selectedIds.length < 2) {
+                    pontState.selectedIds.push(char.id);
+                    msgAreaPont.innerText = "";
+                } else msgAreaPont.innerText = "Màxim 2 animals!";
+            }
+            pontRender();
+        }
+
+        function pontMove() {
+            if (pontState.selectedIds.length === 0) return;
+            const selectedChars = pontChars.filter(c => pontState.selectedIds.includes(c.id));
+            const speeds = selectedChars.map(c => c.speed);
+            pontState.time += Math.max(...speeds);
+
+            if (pontState.lanternPos === 'left') {
+                pontState.rightSide.push(...selectedChars);
+                pontState.leftSide = pontState.leftSide.filter(c => !pontState.selectedIds.includes(c.id));
+                pontState.lanternPos = 'right';
+            } else {
+                pontState.leftSide.push(...selectedChars);
+                pontState.rightSide = pontState.rightSide.filter(c => !pontState.selectedIds.includes(c.id));
+                pontState.lanternPos = 'left';
+            }
+            pontState.selectedIds = [];
+            pontRender();
+            pontCheckGameState();
+        }
+
+        function pontCheckGameState() {
+            if (pontState.rightSide.length === 4) {
+                if (pontState.time <= 17) {
+                    pontShowModal("🏆 VICTÒRIA! 🏆", `Has superat els dos enigmes! Temps final: ${pontState.time} min.`, false);
+                } else {
+                    pontShowModal("⌛ Massa tard...", `Has trigat ${pontState.time} minuts. La llanterna s'ha apagat.`, true);
+                }
+            }
+        }
+
+        function pontShowModal(title, text, isRetry) {
+            document.getElementById('m-title-pont').innerText = title;
+            document.getElementById('m-text-pont').innerHTML = text;
+            const btn = document.querySelector('#modal-pont .btn-start');
+            if (isRetry) {
+                btn.innerText = "Tornar a provar el Pont";
+                btn.onclick = pontStartGame;
+            } else {
+                btn.innerText = "Tornar a començar TOT";
+                btn.onclick = () => location.reload();
+            }
+            pontModal.style.display = 'flex';
+        }
+
+        // Iniciar Nivell 1
+        riuInitGame();
+
+    </script>
+</body>
+</html>

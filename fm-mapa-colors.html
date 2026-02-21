@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enigma 16: El Repte dels 4 Colors</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* BARRA LATERAL */
+        .sidebar {
+            width: 250px;
+            background-color: #1a252f;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .sidebar h2 {
+            margin-top: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 1px; color: #f1c40f; margin-bottom: 30px; text-align: center;
+        }
+
+        .level-btn {
+            background-color: #34495e; color: #bdc3c7; border: none; padding: 15px; margin-bottom: 10px; border-radius: 8px; text-align: left; cursor: pointer; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center; font-weight: bold;
+        }
+        .level-btn:hover { background-color: #2c3e50; }
+        .level-btn.active { background-color: #3498db; color: white; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4); }
+        .level-btn.locked { background-color: #151e26; color: #555; cursor: not-allowed; opacity: 0.7; }
+        .level-btn .icon { font-size: 1.2em; }
+
+        /* ÀREA PRINCIPAL */
+        .main-area {
+            flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;
+        }
+
+        h1 { margin: 0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 2em; }
+        p { color: #bdc3c7; font-size: 1.1em; margin-bottom: 20px; text-align: center; max-width: 700px; }
+
+        .palette { display: flex; gap: 15px; margin-bottom: 20px; background-color: rgba(0,0,0,0.3); padding: 15px; border-radius: 50px; }
+        .color-btn { width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: 4px solid transparent; transition: transform 0.2s, border-color 0.2s; }
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.active { border-color: white; box-shadow: 0 0 15px rgba(255,255,255,0.5); transform: scale(1.15); }
+        
+        .c-red { background-color: #e74c3c; }
+        .c-blue { background-color: #3498db; }
+        .c-green { background-color: #2ecc71; }
+        .c-yellow { background-color: #f1c40f; }
+
+        #status-msg { height: 30px; font-weight: bold; margin-bottom: 10px; font-size: 1.2em; display: flex; align-items: center; gap: 10px;}
+        .error { color: #e74c3c; animation: shake 0.5s; }
+        .success { color: #2ecc71; }
+        .error-icon { display: inline-block; width: 20px; height: 20px; background: #e74c3c; color: white; border-radius: 50%; text-align: center; line-height: 20px; font-size: 14px; margin-right: 5px; }
+
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+
+        svg { width: 700px; height: 450px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+        path { stroke: #2c3e50; stroke-width: 3px; fill: #ecf0f1; cursor: crosshair; transition: fill 0.2s; }
+        path:hover { opacity: 0.8; stroke: white; }
+
+        .reset-btn { position: absolute; bottom: 20px; right: 20px; padding: 10px 20px; background-color: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .reset-btn:hover { background-color: #7f8c8d; }
+
+        /* MODAL VICTÒRIA */
+        #victory-modal {
+            display: none; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); 
+            z-index: 100; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .victory-box {
+            background-color: rgba(44, 62, 80, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid #f1c40f;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 500px;
+        }
+
+        .victory-box h2 { font-size: 2.5em; color: #f1c40f; margin-bottom: 10px; margin-top: 0;}
+        .victory-box p { font-size: 1.3em; margin-bottom: 30px; color: white; }
+        
+        .modal-btn { padding: 12px 25px; font-size: 1.2em; border: none; border-radius: 10px; cursor: pointer; margin: 0 10px; font-weight: bold;}
+        .btn-next { background-color: #2ecc71; color: white; }
+        .btn-replay { background-color: #34495e; color: white; border: 2px solid #bdc3c7;}
+        .btn-next:hover { background-color: #27ae60; transform: scale(1.05);}
+        .btn-replay:hover { background-color: #2c3e50; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Mapes</h2>
+        <button class="level-btn active" id="btn-lvl-0" onclick="loadLevel(0)"><span>1. L'Illa</span> <span class="icon">🌍</span></button>
+        <button class="level-btn locked" id="btn-lvl-1" onclick="loadLevel(1)"><span>2. La Flor</span> <span class="icon">🔒</span></button>
+        <button class="level-btn locked" id="btn-lvl-2" onclick="loadLevel(2)"><span>3. El Vitrall</span> <span class="icon">🔒</span></button>
+        <button class="level-btn locked" id="btn-lvl-3" onclick="loadLevel(3)"><span>4. El Nucli</span> <span class="icon">🔒</span></button>
+    </div>
+
+    <div class="main-area">
+        <h1 id="level-title">Nivell 1: L'Illa</h1>
+        <p>Omple les zones de color. <br>Si dues zones comparteixen una <strong>línia</strong> de frontera, han de ser diferents. <br>Si només comparteixen un <strong>punt</strong>, poden ser iguals.</p>
+
+        <div id="status-msg">Selecciona un color per començar</div>
+
+        <div class="palette">
+            <div class="color-btn c-red" onclick="selectColor('#e74c3c', this)"></div>
+            <div class="color-btn c-blue" onclick="selectColor('#3498db', this)"></div>
+            <div class="color-btn c-green" onclick="selectColor('#2ecc71', this)"></div>
+            <div class="color-btn c-yellow" onclick="selectColor('#f1c40f', this)"></div>
+        </div>
+
+        <div id="svg-container"></div>
+        <button class="reset-btn" onclick="resetCurrentMap()">Netejar mapa</button>
+    </div>
+
+    <div id="victory-modal">
+        <div class="victory-box">
+            <h2 id="victory-title">🎉 MOLT BÉ! 🎉</h2>
+            <p id="victory-text">Has completat aquest mapa correctament.</p>
+            <div>
+                <button class="modal-btn btn-replay" onclick="closeModal()">Mirar el mapa</button>
+                <button class="modal-btn btn-next" id="btn-modal-next" onclick="handleNextAction()">Següent Nivell ➡</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DADES DELS 4 NIVELLS ---
+        
+        // NIVELL 1: L'ILLA
+        const map1 = {
+            name: "L'Illa",
+            svg: `
+                <path id="p1" d="M 100,50 L 300,50 L 250,150 L 100,150 Z" onclick="paintRegion('p1')" />
+                <path id="p2" d="M 300,50 L 600,50 L 600,200 L 450,150 L 350,150 L 300,50 Z" onclick="paintRegion('p2')" />
+                <path id="p3" d="M 250,150 L 350,150 L 450,150 L 430,250 L 270,250 Z" onclick="paintRegion('p3')" />
+                <path id="p4" d="M 100,150 L 250,150 L 270,250 L 100,350 Z" onclick="paintRegion('p4')" />
+                <path id="p5" d="M 450,150 L 600,200 L 600,300 L 500,250 L 430,250 Z" onclick="paintRegion('p5')" />
+                <path id="p6" d="M 430,250 L 500,250 L 600,300 L 600,350 L 400,350 Z" onclick="paintRegion('p6')" />
+                <path id="p7" d="M 270,250 L 430,250 L 400,350 L 300,350 Z" onclick="paintRegion('p7')" />
+                <path id="p8" d="M 100,350 L 300,350 L 400,350 L 600,350 L 600,380 L 100,380 Z" onclick="paintRegion('p8')" />
+            `,
+            graph: {
+                'p1': ['p4'], 'p2': ['p3', 'p5'], 'p3': ['p2', 'p4', 'p5', 'p7'], 
+                'p4': ['p1', 'p3'], 'p5': ['p2', 'p3', 'p6'], 
+                'p6': ['p5', 'p7', 'p8'], 'p7': ['p3', 'p6', 'p8'], 'p8': ['p6', 'p7'] 
+            }
+        };
+
+        // NIVELL 2: LA FLOR (REDISSENYAT: 5 Pètals toquen les 5 cares del pentàgon)
+        const map2 = {
+            name: "La Flor",
+            svg: `
+                <path id="c1" d="M 350,225 L 400,265 L 380,325 L 320,325 L 300,265 Z" onclick="paintRegion('c1')" />
+                <path id="c2" d="M 350,225 L 350,50 L 480,150 L 400,265 Z" onclick="paintRegion('c2')" />
+                <path id="c3" d="M 400,265 L 480,150 L 450,350 L 380,325 Z" onclick="paintRegion('c3')" />
+                <path id="c4" d="M 380,325 L 450,350 L 250,350 L 320,325 Z" onclick="paintRegion('c4')" />
+                <path id="c5" d="M 320,325 L 250,350 L 100,250 L 300,265 Z" onclick="paintRegion('c5')" />
+                <path id="c6" d="M 300,265 L 100,250 L 100,50 L 350,50 L 350,225 Z" onclick="paintRegion('c6')" />
+            `,
+            graph: {
+                'c1': ['c2', 'c3', 'c4', 'c5', 'c6'],
+                'c2': ['c1', 'c3', 'c6'],
+                'c3': ['c1', 'c2', 'c4'],
+                'c4': ['c1', 'c3', 'c5'],
+                'c5': ['c1', 'c4', 'c6'],
+                'c6': ['c1', 'c5', 'c2']
+            }
+        };
+
+        // NIVELL 3: EL VITRALL
+        const map3 = {
+            name: "El Vitrall",
+            svg: `
+                <path id="v1" d="M 50,50 L 350,150 L 50,250 Z" onclick="paintRegion('v1')" />
+                <path id="v2" d="M 50,50 L 650,50 L 350,150 Z" onclick="paintRegion('v2')" />
+                <path id="v3" d="M 650,50 L 650,250 L 350,150 Z" onclick="paintRegion('v3')" />
+                <path id="v4" d="M 50,250 L 350,150 L 350,350 L 50,400 Z" onclick="paintRegion('v4')" />
+                <path id="v5" d="M 350,150 L 650,250 L 650,400 L 350,350 Z" onclick="paintRegion('v5')" />
+                <path id="v6" d="M 350,350 L 650,400 L 50,400 Z" onclick="paintRegion('v6')" />
+            `,
+            graph: {
+                'v1': ['v2', 'v4'], 'v2': ['v1', 'v3'], 'v3': ['v2', 'v5'],
+                'v4': ['v1', 'v5', 'v6'], 'v5': ['v3', 'v4', 'v6'], 'v6': ['v4', 'v5']
+            }
+        };
+
+        // NIVELL 4: EL NUCLI (REDISSENYAT - Graf K4)
+        // Triangle dividit en 3 + Marc exterior. Totes 4 regions es toquen.
+        const map4 = {
+            name: "El Nucli (K4)",
+            svg: `
+                <path id="m4" d="M 50,50 L 650,50 L 650,450 L 50,450 Z" onclick="paintRegion('m4')" />
+                
+                <path id="m1" d="M 100,100 L 600,100 L 350,200 Z" onclick="paintRegion('m1')" />
+                
+                <path id="m2" d="M 600,100 L 350,400 L 350,200 Z" onclick="paintRegion('m2')" />
+                
+                <path id="m3" d="M 350,400 L 100,100 L 350,200 Z" onclick="paintRegion('m3')" />
+            `,
+            graph: {
+                // Tothom toca a tothom (Graf Complet K4)
+                'm1': ['m2', 'm3', 'm4'],
+                'm2': ['m1', 'm3', 'm4'],
+                'm3': ['m1', 'm2', 'm4'],
+                'm4': ['m1', 'm2', 'm3']
+            }
+        };
+
+        const levels = [map1, map2, map3, map4];
+        let currentLevelIndex = 0;
+        let unlockedLevels = [true, false, false, false]; 
+        
+        let selectedColor = null;
+        let regionColors = {};
+        const defaultColor = "#ecf0f1";
+        
+        const msgBox = document.getElementById('status-msg');
+        const victoryModal = document.getElementById('victory-modal');
+        const container = document.getElementById('svg-container');
+        const victoryTitle = document.getElementById('victory-title');
+        const victoryText = document.getElementById('victory-text');
+        const victoryBtnNext = document.getElementById('btn-modal-next');
+
+        loadLevel(0);
+
+        function loadLevel(index) {
+            if (!unlockedLevels[index]) return;
+            currentLevelIndex = index;
+            updateSidebar();
+            const levelData = levels[index];
+            document.getElementById('level-title').textContent = `Nivell ${index + 1}: ${levelData.name}`;
+            container.innerHTML = `<svg viewBox="0 0 700 450" xmlns="http://www.w3.org/2000/svg">${levelData.svg}</svg>`;
+            regionColors = {};
+            for (let r in levelData.graph) regionColors[r] = null;
+            selectedColor = null;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            msgBox.innerHTML = "Nou mapa llest. Som-hi!";
+            msgBox.className = "";
+            victoryModal.style.display = 'none';
+        }
+
+        function updateSidebar() {
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`btn-lvl-${i}`);
+                btn.className = 'level-btn';
+                if (!unlockedLevels[i]) {
+                    btn.classList.add('locked');
+                    btn.querySelector('.icon').textContent = '🔒';
+                } else {
+                    btn.querySelector('.icon').textContent = '✅'; 
+                }
+                if (i === currentLevelIndex) {
+                    btn.classList.add('active');
+                    btn.querySelector('.icon').textContent = '📍';
+                }
+            }
+        }
+
+        function selectColor(color, btnElement) {
+            selectedColor = color;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            msgBox.innerHTML = "Color seleccionat.";
+            msgBox.className = "";
+        }
+
+        function paintRegion(id) {
+            if (!selectedColor) {
+                msgBox.innerHTML = "<span class='error-icon'>!</span> Tria un color!";
+                msgBox.className = "error";
+                return;
+            }
+            const currentGraph = levels[currentLevelIndex].graph;
+            const neighbors = currentGraph[id] || [];
+            let collision = false;
+            for (let nId of neighbors) {
+                if (regionColors[nId] === selectedColor) {
+                    collision = true;
+                    flashError(nId);
+                    break;
+                }
+            }
+            if (collision) {
+                msgBox.innerHTML = "<span class='error-icon'>⛔</span> ERROR! No poden tocar-se!";
+                msgBox.className = "error";
+                const el = document.getElementById(id);
+                el.style.fill = "#555";
+                setTimeout(() => { el.style.fill = regionColors[id] || defaultColor; }, 200);
+            } else {
+                const el = document.getElementById(id);
+                el.style.fill = selectedColor;
+                regionColors[id] = selectedColor;
+                msgBox.innerHTML = "Bé!";
+                msgBox.className = "success";
+                checkVictory();
+            }
+        }
+
+        function flashError(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.style.stroke = "white";
+                el.style.strokeWidth = "5px";
+                setTimeout(() => { el.style.stroke = "#2c3e50"; el.style.strokeWidth = "3px"; }, 300);
+            }
+        }
+
+        function checkVictory() {
+            const keys = Object.keys(levels[currentLevelIndex].graph);
+            const allFilled = keys.every(k => regionColors[k] !== null);
+            if (allFilled) {
+                if (currentLevelIndex < 3) {
+                    victoryTitle.textContent = "🎉 MOLT BÉ! 🎉";
+                    victoryText.textContent = "Has completat aquest mapa correctament.";
+                    victoryBtnNext.textContent = "Següent Nivell ➡";
+                    unlockedLevels[currentLevelIndex + 1] = true;
+                    updateSidebar();
+                } else {
+                    victoryTitle.textContent = "🏆 FELICITATS! 🏆";
+                    victoryText.textContent = "Has superat els 4 nivells! Ets un mestre!";
+                    victoryBtnNext.textContent = "Tornar a Començar";
+                }
+                victoryModal.style.display = 'flex';
+            }
+        }
+
+        function handleNextAction() {
+            if (currentLevelIndex < 3) {
+                loadLevel(currentLevelIndex + 1);
+            } else {
+                unlockedLevels = [true, false, false, false];
+                currentLevelIndex = 0;
+                loadLevel(0);
+            }
+        }
+
+        function resetCurrentMap() { loadLevel(currentLevelIndex); }
+        function closeModal() { victoryModal.style.display = 'none'; }
+    </script>
+</body>
+</html>
