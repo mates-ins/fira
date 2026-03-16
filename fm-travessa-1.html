@@ -7,7 +7,7 @@
     <style>
         /* ESTILS GENERALS I TRANSICIONS */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Verdana, 'Segoe UI', Geneva, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -47,7 +47,7 @@
         #level-1 p { color: #bdc3c7; }
 
         .game-container-riu {
-            display: flex; width: 90%; max-width: 1000px; height: 400px;
+            display: flex; width: 90%; max-width: 1000px; height: clamp(280px, 48vh, 400px);
             border: 4px solid #34495e; border-radius: 15px; overflow: hidden;
             position: relative; background-color: #87CEEB;
         }
@@ -70,8 +70,10 @@
             position: absolute; transition: left 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95);
             display: flex; justify-content: center; align-items: flex-end; padding-bottom: 15px;
             border: 4px solid #5e2c75; cursor: pointer; z-index: 10; box-shadow: 0 10px 10px rgba(0,0,0,0.2);
+            -webkit-tap-highlight-color: transparent;
         }
         .boat:hover { filter: brightness(1.1); }
+        .boat:active { filter: brightness(1.1); }
         .boat[data-pos="left"] { left: 10px; }
         .boat[data-pos="right"] { left: calc(100% - 150px); }
         .boat-hint {
@@ -81,8 +83,10 @@
 
         .character-riu {
             font-size: 4em; cursor: pointer; transition: transform 0.2s; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         .character-riu:hover { transform: scale(1.15); }
+        .character-riu:active { transform: scale(1.15); }
         .character-riu.in-boat { font-size: 3em; margin-bottom: 5px; }
 
         /* --- ESTILS NIVELL 2 (PONT) --- */
@@ -90,7 +94,7 @@
 
         .game-board-pont {
             display: flex; align-items: center; justify-content: space-between;
-            width: 95%; max-width: 1000px; height: 400px;
+            width: 95%; max-width: 1000px; height: clamp(280px, 48vh, 400px);
             background: linear-gradient(to bottom, #161b22 0%, #0d1117 100%);
             border: 2px solid #30363d; border-radius: 15px;
             position: relative; padding: 0 20px; box-sizing: border-box; overflow: hidden;
@@ -145,6 +149,7 @@
         .controls { margin-top: 20px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
         button {
             padding: 15px 40px; font-size: 1.3em; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-family: inherit; transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn-row { background-color: #f39c12; color: white; box-shadow: 0 5px 0 #d35400; }
         .btn-row:active { transform: translateY(5px); box-shadow: none; }
@@ -684,6 +689,14 @@
 
         // Iniciar Nivell 1
         riuInitGame();
+
+        // Keyboard support per a la barca (Enter / Space)
+        riuBoatEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                riuHandleBoatClick();
+            }
+        });
 
     </script>
 </body>
